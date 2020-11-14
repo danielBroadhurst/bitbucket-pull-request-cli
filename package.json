@@ -1,0 +1,11 @@
+{
+  "name": "db-ideas",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "publish": "node index.js"
+  },
+  "author": "",
+  "license": "ISC"
+}
