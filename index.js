@@ -38,7 +38,7 @@ readline.on("line", async (line) => {
           const branch = yield;
           const title = yield requestPullRequestTitle();
           const response = yield createPullRequest(title, branch);
-          console.log(`Pull Request Created: ${response.pullRequestUrl}`);
+          console.log(`Pull Request Created: ${response.links.html.href}`);
           readline.prompt();
         } catch (error) {
           console.log({ error });
@@ -51,7 +51,6 @@ readline.on("line", async (line) => {
       }
       async function createPullRequest(title, branch) {
         const details = generateUrlRequest(title, branch);
-        console.log(details);
         try {
           const response = await fetch(details.pullRequestUrl, {
             method: "POST",
@@ -79,6 +78,8 @@ readline.on("line", async (line) => {
         }
       );
       break;
+    default:
+      readline.prompt();
   }
 });
 
