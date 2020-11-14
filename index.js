@@ -49,7 +49,6 @@ async function generateUrlRequest(title, branch, user) {
   const bitBucketPass = "eYnmPPVKqXcrNGzdZYNm";
   const pullRequestUrl = buildUrl(workspace, repoSlug, { type: "pullRequest" });
   const description = await getDifferenceComments(workspace, repoSlug);
-  console.log(description);
   const data = {
     title: title,
     description: description,
