@@ -1,16 +1,16 @@
 #! /usr/bin/env node
 const fetch = require("node-fetch");
 
-async function generateUrlRequest() {
+async function generateUrlRequest(title, branch) {
   const workspace = "danielbroadhurst1986";
   const repoSlug = "node-cli";
   const bitBucketPass = "eYnmPPVKqXcrNGzdZYNm";
   const pullRequestUrl = `https://api.bitbucket.org/2.0/repositories/${workspace}/${repoSlug}/pullrequests`;
   const data = {
-    title: "My First Pull Request",
+    title: title,
     source: {
       branch: {
-        name: "dev",
+        name: branch,
       },
     },
     destination: {
@@ -31,7 +31,6 @@ async function generateUrlRequest() {
       body: JSON.stringify(data),
     });
     const json = await response.json();
-    console.log(json);
     return json;
   } catch (error) {
     console.log(error);
@@ -51,26 +50,27 @@ readline.on("line", async (line) => {
       function* actionGenerator() {
         try {
           const branch = yield;
-          const comments = yield generateUrlRequest();
-          console.log(comments);
+          const title = yield requestPullRequestTitle();
+          const response = yield generateUrlRequest(title, branch);
+          console.log(branch, title, response);
         } catch (error) {
           console.log({ error });
         }
       }
-      function checkComments() {
-        readline.question(
-          `How many servings did you eat? ( as a decimal: 1, 0.5, 1.25, etc.. ) `,
-          (servingSize) => {
-            actionIt.next(servingSize);
-          }
-        );
+      function requestPullRequestTitle() {
+        readline.question(`Enter the title for the pull request? `, (title) => {
+          actionIt.next(title);
+        });
       }
-      readline.question(`What would you like to log today? `, (branch) => {
-        actionIt = actionGenerator();
-        actionIt.next();
-        actionIt.next(branch);
-        readline.prompt();
-      });
+      readline.question(
+        `Which branch would you like to create a PR for? `,
+        (branch) => {
+          actionIt = actionGenerator();
+          actionIt.next();
+          actionIt.next(branch);
+          readline.prompt();
+        }
+      );
       break;
   }
 });
