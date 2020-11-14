@@ -1,7 +1,7 @@
 #! /usr/bin/env node
 const fetch = require("node-fetch");
 
-async function generateUrlRequest(title, branch) {
+function generateUrlRequest(title, branch) {
   const workspace = "danielbroadhurst1986";
   const repoSlug = "node-cli";
   const bitBucketPass = "eYnmPPVKqXcrNGzdZYNm";
@@ -19,7 +19,8 @@ async function generateUrlRequest(title, branch) {
       },
     },
   };
-  return { workspace, bitBucketPass, pullRequestUrl, data };
+  const details = { workspace, bitBucketPass, pullRequestUrl, data };
+  return details;
 }
 
 const readline = require("readline").createInterface({
@@ -37,7 +38,8 @@ readline.on("line", async (line) => {
           const branch = yield;
           const title = yield requestPullRequestTitle();
           const response = yield createPullRequest(title, branch);
-          console.log(branch, title, response);
+          console.log(`Pull Request Created: ${response.pullRequestUrl}`);
+          readline.prompt();
         } catch (error) {
           console.log({ error });
         }
@@ -47,23 +49,24 @@ readline.on("line", async (line) => {
           actionIt.next(title);
         });
       }
-      function createPullRequest(title, branch) {
-        const { workspace, bitBucketPass, pullRequestUrl, data } = generateUrlRequest(title, branch);
+      async function createPullRequest(title, branch) {
+        const details = generateUrlRequest(title, branch);
+        console.log(details);
         try {
-          const response = await fetch(pullRequestUrl, {
+          const response = await fetch(details.pullRequestUrl, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
               Authorization: `Basic ${Buffer.from(
-                `${workspace}:${bitBucketPass}`
+                `${details.workspace}:${details.bitBucketPass}`
               ).toString("base64")}`,
             },
-            body: JSON.stringify(data),
+            body: JSON.stringify(details.data),
           });
           const json = await response.json();
           actionIt.next(json);
         } catch (error) {
-          console.log(error);
+          actionIt.throw(error);
         }
       }
       readline.question(
