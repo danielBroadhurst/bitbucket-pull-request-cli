@@ -1,5 +1,4 @@
 #! /usr/bin/env node
-/* eslint-disable no-inner-declarations */
 const fetch = require("node-fetch");
 // eslint-disable-next-line no-unused-vars
 const colors = require("colors");
@@ -38,7 +37,7 @@ readline.on("line", async (line) => {
   switch (line.trim()) {
     case "eslint":
       {
-        async function eslint() {
+        const eslint = async function eslint() {
           try {
             const { stdout } = await exec("eslint index.js --fix");
             if (stdout === "") {
@@ -49,18 +48,18 @@ readline.on("line", async (line) => {
           } finally {
             readline.prompt();
           }
-        }
+        };
         eslint();
       }
       break;
     case "cpr":
       {
         let actionIt;
-        function* actionGenerator() {
+        const actionGen = function* actionGenerator() {
           try {
             const branch = yield;
-            const title = yield requestPullRequestTitle();
-            const response = yield createPullRequest(title, branch);
+            const title = yield requestTitle();
+            const response = yield createRequest(title, branch);
             console.log(
               `Pull Request Created: ${response.links.html.href}`.green
             );
@@ -68,16 +67,16 @@ readline.on("line", async (line) => {
           } catch (error) {
             console.log({ error });
           }
-        }
-        function requestPullRequestTitle() {
+        };
+        const requestTitle = function requestPullRequestTitle() {
           readline.question(
             `Enter the title for the pull request? `,
             (title) => {
               actionIt.next(title);
             }
           );
-        }
-        async function createPullRequest(title, branch) {
+        };
+        const createRequest = async function createPullRequest(title, branch) {
           const details = generateUrlRequest(title, branch);
           try {
             const response = await fetch(details.pullRequestUrl, {
@@ -95,11 +94,11 @@ readline.on("line", async (line) => {
           } catch (error) {
             actionIt.throw(error);
           }
-        }
+        };
         readline.question(
           `Which branch would you like to create a PR for? `,
           (branch) => {
-            actionIt = actionGenerator();
+            actionIt = actionGen();
             actionIt.next();
             actionIt.next(branch);
             readline.prompt();
@@ -107,6 +106,8 @@ readline.on("line", async (line) => {
         );
       }
       break;
+    case "exit":
+      return process.exit();
     default:
       readline.prompt();
   }
