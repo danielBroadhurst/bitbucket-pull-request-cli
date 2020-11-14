@@ -6,14 +6,53 @@ const util = require("util");
 const exec = util.promisify(require("child_process").exec);
 const package = require("./package.json");
 
-function generateUrlRequest(title, branch, user) {
+const BASE_URL = "https://api.bitbucket.org/2.0/repositories/";
+
+function buildUrl(workspace, repoSlug, action) {
+  switch (action.type) {
+    case "pullRequest":
+      return `${BASE_URL}${workspace}/${repoSlug}/pullrequests`;
+    case "commentDiff":
+      return `${BASE_URL}${workspace}/${repoSlug}/commits/?exclude=master`;
+    default:
+      return `${BASE_URL}${workspace}/${repoSlug}/`;
+  }
+}
+
+async function getDifferenceComments(workspace, repoSlug) {
+  const url = buildUrl(workspace, repoSlug, { type: "commentDiff" });
+  let message = "";
+  try {
+    const response = await fetch(url);
+    if (response.ok) {
+      const json = await response.json();
+      json.values.forEach((item) => {
+        message += `${item.message}\n`;
+      });
+      return message;
+    } else {
+      throw response;
+    }
+  } catch (error) {
+    let message = `${error.status}: ${error.statusText}`;
+    if (error.status === 400) {
+      const errorMessage = await error.json();
+      message += ` - ${errorMessage.error.message}`;
+    }
+    throw message;
+  }
+}
+
+async function generateUrlRequest(title, branch, user) {
   const workspace = user;
   const repoSlug = package.name;
   const bitBucketPass = "eYnmPPVKqXcrNGzdZYNm";
-  const pullRequestUrl = `https://api.bitbucket.org/2.0/repositories/${workspace}/${repoSlug}/pullrequests`;
+  const pullRequestUrl = buildUrl(workspace, repoSlug, { type: "pullRequest" });
+  const description = await getDifferenceComments(workspace, repoSlug);
+  console.log(description);
   const data = {
     title: title,
-    description: "TEST DESCRIPTIONSsws   ss",
+    description: description,
     source: {
       branch: {
         name: branch,
@@ -92,7 +131,7 @@ readline.on("line", async (line) => {
           branch,
           user
         ) {
-          const details = generateUrlRequest(title, branch, user);
+          const details = await generateUrlRequest(title, branch, user);
           try {
             const response = await fetch(details.pullRequestUrl, {
               method: "POST",
