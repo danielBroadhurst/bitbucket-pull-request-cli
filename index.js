@@ -62,7 +62,6 @@ readline.on("line", async (line) => {
             const branch = yield requestBranch();
             const title = yield requestTitle();
             const response = yield createRequest(title, branch, user);
-            console.log(response);
             console.log(
               `Pull Request Created: ${response.links.html.href}`.green
             );
