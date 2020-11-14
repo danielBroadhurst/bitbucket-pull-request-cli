@@ -1,4 +1,43 @@
 #! /usr/bin/env node
+const fetch = require("node-fetch");
+
+async function generateUrlRequest() {
+  const workspace = "danielbroadhurst1986";
+  const repoSlug = "node-cli";
+  const bitBucketPass = "eYnmPPVKqXcrNGzdZYNm";
+  const pullRequestUrl = `https://api.bitbucket.org/2.0/repositories/${workspace}/${repoSlug}/pullrequests`;
+  const data = {
+    title: "My First Pull Request",
+    source: {
+      branch: {
+        name: "dev",
+      },
+    },
+    destination: {
+      branch: {
+        name: "master",
+      },
+    },
+  };
+  try {
+    const response = await fetch(pullRequestUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Basic ${Buffer.from(
+          `${workspace}:${bitBucketPass}`
+        ).toString("base64")}`,
+      },
+      body: JSON.stringify(data),
+    });
+    const json = await response.json();
+    console.log(json);
+    return json;
+  } catch (error) {
+    console.log(error);
+  }
+}
+
 const readline = require("readline").createInterface({
   input: process.stdin,
   output: process.stdout,
@@ -12,7 +51,7 @@ readline.on("line", async (line) => {
       function* actionGenerator() {
         try {
           const branch = yield;
-          const comments = yield checkComments();
+          const comments = yield generateUrlRequest();
           console.log(comments);
         } catch (error) {
           console.log({ error });
