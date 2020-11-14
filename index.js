@@ -1,4 +1,5 @@
 #! /usr/bin/env node
+require("dotenv").config();
 const fetch = require("node-fetch");
 // eslint-disable-next-line no-unused-vars
 const colors = require("colors");
@@ -44,7 +45,7 @@ async function getDifferenceComments(workspace, repoSlug) {
 async function generateUrlRequest(title, branch, user) {
   const workspace = user;
   const repoSlug = package.name;
-  const bitBucketPass = "eYnmPPVKqXcrNGzdZYNm";
+  const bitBucketPass = process.env.BITBUCKET_APP_PASSWORD;
   const pullRequestUrl = buildUrl(workspace, repoSlug, { type: "pullRequest" });
   const description = await getDifferenceComments(workspace, repoSlug);
   const data = {
