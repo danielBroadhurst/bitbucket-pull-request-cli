@@ -4,10 +4,11 @@ const fetch = require("node-fetch");
 const colors = require("colors");
 const util = require("util");
 const exec = util.promisify(require("child_process").exec);
+const package = require("./package.json");
 
-function generateUrlRequest(title, branch) {
-  const workspace = "danielbroadhurst1986";
-  const repoSlug = "node-cli";
+function generateUrlRequest(title, branch, user) {
+  const workspace = user;
+  const repoSlug = package.name;
   const bitBucketPass = "eYnmPPVKqXcrNGzdZYNm";
   const pullRequestUrl = `https://api.bitbucket.org/2.0/repositories/${workspace}/${repoSlug}/pullrequests`;
   const data = {
@@ -57,16 +58,26 @@ readline.on("line", async (line) => {
         let actionIt;
         const actionGen = function* actionGenerator() {
           try {
-            const branch = yield;
+            const user = yield;
+            const branch = yield requestBranch();
             const title = yield requestTitle();
-            const response = yield createRequest(title, branch);
+            const response = yield createRequest(title, branch, user);
+            console.log(response);
             console.log(
               `Pull Request Created: ${response.links.html.href}`.green
             );
             readline.prompt();
           } catch (error) {
-            console.log({ error });
+            console.log(error.red);
           }
+        };
+        const requestBranch = function requestPullRequestBranch() {
+          readline.question(
+            `Which branch would you like to create a PR for? `,
+            (branch) => {
+              actionIt.next(branch);
+            }
+          );
         };
         const requestTitle = function requestPullRequestTitle() {
           readline.question(
@@ -76,8 +87,12 @@ readline.on("line", async (line) => {
             }
           );
         };
-        const createRequest = async function createPullRequest(title, branch) {
-          const details = generateUrlRequest(title, branch);
+        const createRequest = async function createPullRequest(
+          title,
+          branch,
+          user
+        ) {
+          const details = generateUrlRequest(title, branch, user);
           try {
             const response = await fetch(details.pullRequestUrl, {
               method: "POST",
@@ -89,18 +104,29 @@ readline.on("line", async (line) => {
               },
               body: JSON.stringify(details.data),
             });
-            const json = await response.json();
-            actionIt.next(json);
+            if (response.ok) {
+              const json = await response.json();
+              return actionIt.next(json);
+            } else {
+              throw response;
+            }
           } catch (error) {
-            actionIt.throw(error);
+            let message = `${error.status}: ${error.statusText}`;
+            if (error.status === 400) {
+              const errorMessage = await error.json();
+              message += ` - ${errorMessage.error.message}`;
+            }
+            actionIt.throw(message);
+          } finally {
+            readline.prompt();
           }
         };
         readline.question(
-          `Which branch would you like to create a PR for? `,
-          (branch) => {
+          `Enter you user or workspace where the repo is held? `,
+          (user) => {
             actionIt = actionGen();
             actionIt.next();
-            actionIt.next(branch);
+            actionIt.next(user);
             readline.prompt();
           }
         );
