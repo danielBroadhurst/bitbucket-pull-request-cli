@@ -31,7 +31,7 @@ async function generateUrlRequest(title, branch) {
       body: JSON.stringify(data),
     });
     const json = await response.json();
-    return json;
+    actionIt.next(json);
   } catch (error) {
     console.log(error);
   }
