@@ -19,22 +19,7 @@ async function generateUrlRequest(title, branch) {
       },
     },
   };
-  try {
-    const response = await fetch(pullRequestUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Basic ${Buffer.from(
-          `${workspace}:${bitBucketPass}`
-        ).toString("base64")}`,
-      },
-      body: JSON.stringify(data),
-    });
-    const json = await response.json();
-    actionIt.next(json);
-  } catch (error) {
-    console.log(error);
-  }
+  return { workspace, bitBucketPass, pullRequestUrl, data };
 }
 
 const readline = require("readline").createInterface({
@@ -51,7 +36,7 @@ readline.on("line", async (line) => {
         try {
           const branch = yield;
           const title = yield requestPullRequestTitle();
-          const response = yield generateUrlRequest(title, branch);
+          const response = yield createPullRequest(title, branch);
           console.log(branch, title, response);
         } catch (error) {
           console.log({ error });
@@ -61,6 +46,25 @@ readline.on("line", async (line) => {
         readline.question(`Enter the title for the pull request? `, (title) => {
           actionIt.next(title);
         });
+      }
+      function createPullRequest(title, branch) {
+        const { workspace, bitBucketPass, pullRequestUrl, data } = generateUrlRequest(title, branch);
+        try {
+          const response = await fetch(pullRequestUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Basic ${Buffer.from(
+                `${workspace}:${bitBucketPass}`
+              ).toString("base64")}`,
+            },
+            body: JSON.stringify(data),
+          });
+          const json = await response.json();
+          actionIt.next(json);
+        } catch (error) {
+          console.log(error);
+        }
       }
       readline.question(
         `Which branch would you like to create a PR for? `,
