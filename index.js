@@ -2,8 +2,6 @@
 const fetch = require("node-fetch");
 // eslint-disable-next-line no-unused-vars
 const colors = require("colors");
-const util = require("util");
-const exec = util.promisify(require("child_process").exec);
 const package = require("./package.json");
 
 const BASE_URL = "https://api.bitbucket.org/2.0/repositories/";
@@ -75,23 +73,6 @@ const readline = require("readline").createInterface({
 readline.prompt();
 readline.on("line", async (line) => {
   switch (line.trim()) {
-    case "eslint":
-      {
-        const eslint = async function eslint() {
-          try {
-            const { stdout } = await exec("eslint index.js --fix");
-            if (stdout === "") {
-              console.log("No errors or warnings found");
-            }
-          } catch (error) {
-            console.log(error.stdout.toString());
-          } finally {
-            readline.prompt();
-          }
-        };
-        eslint();
-      }
-      break;
     case "cpr":
       {
         let actionIt;
