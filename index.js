@@ -13,6 +13,7 @@ function generateUrlRequest(title, branch, user) {
   const pullRequestUrl = `https://api.bitbucket.org/2.0/repositories/${workspace}/${repoSlug}/pullrequests`;
   const data = {
     title: title,
+    description: "TEST DESCRIPTIONS",
     source: {
       branch: {
         name: branch,
