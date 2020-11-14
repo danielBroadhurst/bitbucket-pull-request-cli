@@ -1,5 +1,6 @@
 #! /usr/bin/env node
 const fetch = require("node-fetch");
+const colors = require("colors");
 
 function generateUrlRequest(title, branch) {
   const workspace = "danielbroadhurst1986";
@@ -38,7 +39,9 @@ readline.on("line", async (line) => {
           const branch = yield;
           const title = yield requestPullRequestTitle();
           const response = yield createPullRequest(title, branch);
-          console.log(`Pull Request Created: ${response.links.html.href}`);
+          console.log(
+            `Pull Request Created: ${response.links.html.href}`.green
+          );
           readline.prompt();
         } catch (error) {
           console.log({ error });
