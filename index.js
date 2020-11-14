@@ -160,7 +160,7 @@ readline.on("line", async (line) => {
           }
         };
         readline.question(
-          `Enter you user or workspace where the repo is held? `,
+          `Enter you username or workspace where the repo is held? `,
           (user) => {
             actionIt = actionGen();
             actionIt.next();
